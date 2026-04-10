@@ -66,7 +66,8 @@
           </div>
         </div>
       </div>
-      <p v-if="habits.length === 0" class="text-gray-400 text-center py-8">
+      <p v-if="loading" class="text-gray-400 text-center py-8">加载中...</p>
+      <p v-else-if="habits.length === 0" class="text-gray-400 text-center py-8">
         添加一个习惯开始打卡吧
       </p>
     </div>
@@ -74,8 +75,10 @@
 </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+import type { Habit } from '~/types'
+
+const { api } = useApi()
+const { confirm } = useConfirm()
 
 const newHabit = ref('')
 const today = new Date().toISOString().split('T')[0]
@@ -83,15 +86,8 @@ const todayDisplay = new Date().toLocaleDateString('zh-CN', { year: 'numeric', m
 
 const weekLabels = ['日', '一', '二', '三', '四', '五', '六']
 
-interface Habit {
-  id: number
-  name: string
-  checkedToday: boolean
-  streak: number
-  last7: { date: string; label: string; checked: boolean }[]
-}
-
 const habits = ref<Habit[]>([])
+const loading = ref(true)
 
 function getLast7Days() {
   const days = []
@@ -108,25 +104,14 @@ function getLast7Days() {
 }
 
 async function fetchHabits() {
-  const { data: habitsData } = await supabase
-    .from('habits')
-    .select('*')
-    .eq('user_id', user.value!.id)
-    .order('created_at')
+  loading.value = true
+  const res = await api<{ habits: any[]; checks: any[] }>('/api/habits')
+  if (res.code !== 200 || !res.data) { loading.value = false; return }
 
-  if (!habitsData) return
-
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-  const { data: checks } = await supabase
-    .from('habit_checks')
-    .select('*')
-    .eq('user_id', user.value!.id)
-    .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+  const { habits: habitsData, checks } = res.data
 
   const checkMap = new Map<string, Set<string>>()
-  for (const c of checks || []) {
+  for (const c of checks) {
     if (!checkMap.has(String(c.habit_id))) checkMap.set(String(c.habit_id), new Set())
     checkMap.get(String(c.habit_id))!.add(c.date)
   }
@@ -147,28 +132,30 @@ async function fetchHabits() {
 
     return { id: h.id, name: h.name, checkedToday: dates.has(today), streak, last7 }
   })
+  loading.value = false
 }
 
 async function addHabit() {
   if (!newHabit.value.trim()) return
-  await supabase.from('habits').insert({ name: newHabit.value.trim(), user_id: user.value!.id })
-  newHabit.value = ''
-  await fetchHabits()
+  const res = await api('/api/habits', { method: 'POST', body: { name: newHabit.value.trim() } })
+  if (res.code === 200) {
+    newHabit.value = ''
+    await fetchHabits()
+  }
 }
 
 async function toggleCheck(habit: Habit) {
-  if (habit.checkedToday) {
-    await supabase.from('habit_checks').delete().eq('habit_id', habit.id).eq('date', today)
-  } else {
-    await supabase.from('habit_checks').insert({ habit_id: habit.id, user_id: user.value!.id, date: today })
-  }
-  await fetchHabits()
+  const res = await api('/api/habits/check', {
+    method: 'POST',
+    body: { habitId: habit.id, date: today, checked: !habit.checkedToday },
+  })
+  if (res.code === 200) await fetchHabits()
 }
 
 async function deleteHabit(id: number) {
-  await supabase.from('habit_checks').delete().eq('habit_id', id)
-  await supabase.from('habits').delete().eq('id', id)
-  habits.value = habits.value.filter(h => h.id !== id)
+  if (!await confirm('确定删除这个习惯？')) return
+  const res = await api('/api/habits/' + id, { method: 'DELETE' })
+  if (res.code === 200) habits.value = habits.value.filter(h => h.id !== id)
 }
 
 onMounted(fetchHabits)

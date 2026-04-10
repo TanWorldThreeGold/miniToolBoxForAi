@@ -1,0 +1,17 @@
+import { serverSupabaseClient } from '#supabase/server'
+import { success, fail } from '~/server/utils/response'
+
+export default defineEventHandler(async (event) => {
+  const id = getRouterParam(event, 'id')
+  const client = await serverSupabaseClient(event)
+
+  await client.from('habit_checks').delete().eq('habit_id', id)
+  const { error } = await client
+    .from('habits')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', event.context.user.id)
+
+  if (error) return fail(error.message)
+  return success(null)
+})

@@ -68,25 +68,25 @@ async function handleSubmit() {
   errorMsg.value = ''
   successMsg.value = ''
 
-  const hashed = await hashPassword(password.value)
-
   if (isRegister.value) {
     const { error } = await supabase.auth.signUp({
       email: email.value,
-      password: hashed,
+      password: password.value,
     })
     if (error) {
-      errorMsg.value = error.message
+      const traceId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+      errorMsg.value = `${error.message} [${traceId}]`
     } else {
       successMsg.value = '注册成功！请检查邮箱确认链接。'
     }
   } else {
     const { error } = await supabase.auth.signInWithPassword({
       email: email.value,
-      password: hashed,
+      password: password.value,
     })
     if (error) {
-      errorMsg.value = error.message
+      const traceId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+      errorMsg.value = `${error.message} [${traceId}]`
     } else {
       navigateTo('/')
     }

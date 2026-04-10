@@ -59,10 +59,20 @@
       </div>
     </div>
 
+    <!-- 搜索 -->
+    <div v-if="!editing" class="mb-4">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="搜索日记..."
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+      />
+    </div>
+
     <!-- 列表 -->
     <div class="space-y-3">
       <div
-        v-for="d in diaries"
+        v-for="d in filteredDiaries"
         :key="d.id"
         class="bg-white border border-gray-200 rounded-xl p-4 group cursor-pointer hover:shadow-sm transition"
         @click="editDiary(d)"
@@ -82,16 +92,17 @@
         <h3 v-if="d.title" class="font-medium text-gray-900 mb-1">{{ d.title }}</h3>
         <p class="text-sm text-gray-600 line-clamp-3 whitespace-pre-wrap">{{ d.content }}</p>
       </div>
-      <p v-if="diaries.length === 0 && !editing" class="text-gray-400 text-center py-8">
-        还没有日记，点击"写日记"开始
+      <p v-if="loading" class="text-gray-400 text-center py-8">加载中...</p>
+      <p v-else-if="filteredDiaries.length === 0 && !editing" class="text-gray-400 text-center py-8">
+        {{ searchQuery ? '无搜索结果' : '还没有日记，点击"写日记"开始' }}
       </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+const { api } = useApi()
+const { confirm } = useConfirm()
 
 const editing = ref(false)
 const editingId = ref<number | null>(null)
@@ -104,15 +115,19 @@ const form = reactive({
   date: today,
 })
 
-interface Diary {
-  id: number
-  title: string
-  content: string
-  mood: string
-  date: string
-}
+import type { Diary } from '~/types'
 
 const diaries = ref<Diary[]>([])
+const loading = ref(true)
+const searchQuery = ref('')
+
+const filteredDiaries = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return diaries.value
+  return diaries.value.filter(d =>
+    d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q)
+  )
+})
 
 function startNew() {
   editingId.value = null
@@ -136,45 +151,37 @@ async function saveDiary() {
   if (!form.content.trim()) return
 
   if (editingId.value) {
-    const { data } = await supabase
-      .from('diaries')
-      .update({ title: form.title, content: form.content, mood: form.mood, date: form.date })
-      .eq('id', editingId.value)
-      .select()
-      .single()
-    if (data) {
+    const res = await api<Diary>('/api/diaries/' + editingId.value, {
+      method: 'PUT',
+      body: { title: form.title, content: form.content, mood: form.mood, date: form.date },
+    })
+    if (res.code === 200 && res.data) {
       const idx = diaries.value.findIndex(d => d.id === editingId.value)
-      if (idx !== -1) diaries.value[idx] = data
+      if (idx !== -1) diaries.value[idx] = res.data
     }
   } else {
-    const { data } = await supabase
-      .from('diaries')
-      .insert({
-        user_id: user.value!.id,
-        title: form.title,
-        content: form.content,
-        mood: form.mood,
-        date: form.date,
-      })
-      .select()
-      .single()
-    if (data) diaries.value.unshift(data)
+    const res = await api<Diary>('/api/diaries', {
+      method: 'POST',
+      body: { title: form.title, content: form.content, mood: form.mood, date: form.date },
+    })
+    if (res.code === 200 && res.data) diaries.value.unshift(res.data)
   }
   editing.value = false
 }
 
 async function deleteDiary(id: number) {
+  if (!await confirm('确定删除这篇日记？')) return
+  const prev = diaries.value
   diaries.value = diaries.value.filter(d => d.id !== id)
-  await supabase.from('diaries').delete().eq('id', id)
+  const res = await api('/api/diaries/' + id, { method: 'DELETE' })
+  if (res.code !== 200) diaries.value = prev
 }
 
 async function fetchDiaries() {
-  const { data } = await supabase
-    .from('diaries')
-    .select('*')
-    .eq('user_id', user.value!.id)
-    .order('date', { ascending: false })
-  diaries.value = data || []
+  loading.value = true
+  const res = await api<Diary[]>('/api/diaries')
+  if (res.code === 200) diaries.value = res.data || []
+  loading.value = false
 }
 
 onMounted(fetchDiaries)

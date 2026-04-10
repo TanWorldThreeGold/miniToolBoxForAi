@@ -58,16 +58,31 @@
     </div>
 
     <!-- 今日统计 -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4">
+    <div class="bg-white border border-gray-200 rounded-xl p-4 mb-6">
       <p class="text-sm text-gray-500">今日完成</p>
       <p class="text-2xl font-bold text-gray-900">{{ todayCount }} 个番茄</p>
+    </div>
+
+    <!-- 历史记录 -->
+    <div class="text-left">
+      <h2 class="font-medium text-gray-900 mb-3">最近记录</h2>
+      <div class="space-y-2">
+        <div
+          v-for="item in history"
+          :key="item.id"
+          class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm"
+        >
+          <span class="text-gray-500">{{ formatDate(item.created_at) }}</span>
+          <span class="font-medium text-gray-900">{{ item.duration }} 分钟</span>
+        </div>
+        <p v-if="history.length === 0" class="text-gray-400 text-center py-4 text-sm">暂无记录</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+const { api } = useApi()
 
 const modes = [
   { key: 'focus', label: '专注 25min' },
@@ -81,6 +96,8 @@ const remaining = ref(durations.focus)
 const running = ref(false)
 const customMinutes = ref(10)
 const todayCount = ref(0)
+const history = ref<{ id: number; duration: number; created_at: string }[]>([])
+let startDuration = durations.focus
 
 let timer: ReturnType<typeof setInterval> | null = null
 
@@ -90,10 +107,16 @@ function formatTime(s: number) {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+function formatDate(iso: string) {
+  const d = new Date(iso)
+  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 function switchMode(m: string) {
   stop()
   mode.value = m
   remaining.value = durations[m]
+  startDuration = durations[m]
 }
 
 function toggle() {
@@ -106,6 +129,7 @@ function start() {
     remaining.value--
     if (remaining.value <= 0) {
       stop()
+      notifyComplete()
       if (mode.value === 'focus') recordPomodoro()
     }
   }, 1000)
@@ -125,27 +149,67 @@ function startCustom() {
   stop()
   mode.value = 'focus'
   remaining.value = customMinutes.value * 60
+  startDuration = customMinutes.value * 60
   start()
 }
 
+function notifyComplete() {
+  // 声音提醒
+  try {
+    const ctx = new AudioContext()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.value = 800
+    gain.gain.value = 0.3
+    osc.start()
+    osc.stop(ctx.currentTime + 0.5)
+    setTimeout(() => {
+      const osc2 = ctx.createOscillator()
+      const gain2 = ctx.createGain()
+      osc2.connect(gain2)
+      gain2.connect(ctx.destination)
+      osc2.frequency.value = 1000
+      gain2.gain.value = 0.3
+      osc2.start()
+      osc2.stop(ctx.currentTime + 0.5)
+    }, 600)
+  } catch {}
+
+  // 浏览器通知
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('番茄钟完成！', { body: '休息一下吧' })
+  }
+}
+
+// 请求通知权限
+function requestNotification() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+}
+
 async function recordPomodoro() {
-  await supabase.from('pomodoros').insert({
-    user_id: user.value!.id,
-    duration: Math.round((durations[mode.value] || customMinutes.value * 60) / 60),
-  })
-  todayCount.value++
+  const duration = Math.round(startDuration / 60)
+  const res = await api<{ id: number; duration: number; created_at: string }>('/api/pomodoros', { method: 'POST', body: { duration } })
+  if (res.code === 200 && res.data) {
+    todayCount.value++
+    history.value.unshift(res.data)
+  }
 }
 
-async function fetchToday() {
-  const today = new Date().toISOString().split('T')[0]
-  const { count } = await supabase
-    .from('pomodoros')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.value!.id)
-    .gte('completed_at', today)
-  todayCount.value = count || 0
+async function fetchData() {
+  const res = await api<{ count: number; history: any[] }>('/api/pomodoros')
+  if (res.code === 200 && res.data) {
+    todayCount.value = res.data.count
+    history.value = res.data.history
+  }
 }
 
-onMounted(fetchToday)
+onMounted(() => {
+  fetchData()
+  requestNotification()
+})
 onUnmounted(stop)
 </script>

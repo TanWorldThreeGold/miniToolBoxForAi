@@ -72,6 +72,18 @@
         placeholder="内容..."
         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent resize-none"
       />
+      <label class="flex items-center gap-2 text-sm text-gray-600">
+        <input v-model="editingMemo.encrypted" type="checkbox" />
+        加密存储（需设置密码）
+      </label>
+      <div v-if="editingMemo.encrypted" class="flex gap-2">
+        <input
+          v-model="encryptPassword"
+          type="password"
+          placeholder="设置加密密码"
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+        />
+      </div>
       <div class="flex gap-2">
         <button
           @click="saveMemo"
@@ -88,15 +100,42 @@
       </div>
     </div>
 
+    <!-- 解密密码输入弹窗 -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="decryptPrompt" class="fixed inset-0 z-50 flex items-center justify-center">
+          <div class="absolute inset-0 bg-black/30" @click="decryptPrompt = null" />
+          <div class="relative bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
+            <p class="text-gray-900 font-medium">输入解密密码</p>
+            <input
+              v-model="decryptInput"
+              type="password"
+              placeholder="密码"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              @keyup.enter="doDecrypt"
+            />
+            <p v-if="decryptError" class="text-sm text-red-500">密码错误</p>
+            <div class="flex gap-3">
+              <button @click="decryptPrompt = null" class="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">取消</button>
+              <button @click="doDecrypt" class="flex-1 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition">解密</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <div class="space-y-2">
       <div
         v-for="m in memos"
         :key="m.id"
         class="bg-white border border-gray-200 rounded-lg px-4 py-3 group cursor-pointer hover:shadow-sm transition"
-        @click="editingMemo = { ...m }"
+        @click="openMemo(m)"
       >
         <div class="flex items-center justify-between">
-          <h3 class="font-medium text-gray-900">{{ m.title || '无标题' }}</h3>
+          <div class="flex items-center gap-2">
+            <span v-if="m.encrypted" class="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">加密</span>
+            <h3 class="font-medium text-gray-900">{{ m.title || '无标题' }}</h3>
+          </div>
           <button
             @click.stop="deleteMemo(m.id)"
             class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
@@ -104,9 +143,12 @@
             ✕
           </button>
         </div>
-        <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ m.content }}</p>
+        <p class="text-sm text-gray-500 mt-1 line-clamp-2">
+          {{ m.encrypted ? '******' : m.content }}
+        </p>
       </div>
-      <p v-if="memos.length === 0 && !editingMemo" class="text-gray-400 text-center py-8">
+      <p v-if="loading" class="text-gray-400 text-center py-8">加载中...</p>
+      <p v-else-if="memos.length === 0 && !editingMemo" class="text-gray-400 text-center py-8">
         暂无备忘录
       </p>
     </div>
@@ -114,8 +156,11 @@
 </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+import type { Memo } from '~/types'
+
+const { api } = useApi()
+const { confirm } = useConfirm()
+const { encrypt, decrypt } = useMemoEncrypt()
 
 // 密码生成器
 const pwLength = ref(16)
@@ -142,61 +187,90 @@ async function copyPassword() {
 }
 
 // 备忘录
-interface Memo {
-  id?: number
-  title: string
-  content: string
-}
-
 const memos = ref<Memo[]>([])
 const editingMemo = ref<Memo | null>(null)
+const loading = ref(true)
+const encryptPassword = ref('')
+
+// 解密弹窗
+const decryptPrompt = ref<Memo | null>(null)
+const decryptInput = ref('')
+const decryptError = ref(false)
 
 function addMemo() {
-  editingMemo.value = { title: '', content: '' }
+  editingMemo.value = { title: '', content: '', encrypted: false }
+  encryptPassword.value = ''
+}
+
+function openMemo(m: Memo) {
+  if (m.encrypted) {
+    decryptPrompt.value = m
+    decryptInput.value = ''
+    decryptError.value = false
+  } else {
+    editingMemo.value = { ...m }
+    encryptPassword.value = ''
+  }
+}
+
+async function doDecrypt() {
+  if (!decryptPrompt.value || !decryptInput.value) return
+  try {
+    const plainContent = await decrypt(decryptPrompt.value.content, decryptInput.value)
+    editingMemo.value = { ...decryptPrompt.value, content: plainContent }
+    encryptPassword.value = decryptInput.value
+    decryptPrompt.value = null
+    decryptError.value = false
+  } catch {
+    decryptError.value = true
+  }
 }
 
 async function saveMemo() {
   if (!editingMemo.value) return
 
+  let content = editingMemo.value.content
+  const isEncrypted = editingMemo.value.encrypted || false
+
+  if (isEncrypted) {
+    if (!encryptPassword.value) {
+      const { showError } = useToast()
+      showError('请设置加密密码')
+      return
+    }
+    content = await encrypt(content, encryptPassword.value)
+  }
+
+  const body = { title: editingMemo.value.title, content, encrypted: isEncrypted }
+
   if (editingMemo.value.id) {
-    const { data } = await supabase
-      .from('memos')
-      .update({ title: editingMemo.value.title, content: editingMemo.value.content, updated_at: new Date().toISOString() })
-      .eq('id', editingMemo.value.id)
-      .select()
-      .single()
-    if (data) {
-      const idx = memos.value.findIndex(m => m.id === data.id)
-      if (idx !== -1) memos.value[idx] = data
+    const res = await api<Memo>('/api/memos/' + editingMemo.value.id, { method: 'PUT', body })
+    if (res.code === 200 && res.data) {
+      const idx = memos.value.findIndex(m => m.id === res.data!.id)
+      if (idx !== -1) memos.value[idx] = res.data
     }
   } else {
-    const { data } = await supabase
-      .from('memos')
-      .insert({
-        user_id: user.value!.id,
-        title: editingMemo.value.title,
-        content: editingMemo.value.content,
-      })
-      .select()
-      .single()
-    if (data) memos.value.unshift(data)
+    const res = await api<Memo>('/api/memos', { method: 'POST', body })
+    if (res.code === 200 && res.data) memos.value.unshift(res.data)
   }
   editingMemo.value = null
+  encryptPassword.value = ''
 }
 
 async function deleteMemo(id: number | undefined) {
   if (!id) return
+  if (!await confirm('确定删除这条备忘录？')) return
+  const prev = memos.value
   memos.value = memos.value.filter(m => m.id !== id)
-  await supabase.from('memos').delete().eq('id', id)
+  const res = await api('/api/memos/' + id, { method: 'DELETE' })
+  if (res.code !== 200) memos.value = prev
 }
 
 async function fetchMemos() {
-  const { data } = await supabase
-    .from('memos')
-    .select('*')
-    .eq('user_id', user.value!.id)
-    .order('updated_at', { ascending: false })
-  memos.value = data || []
+  loading.value = true
+  const res = await api<Memo[]>('/api/memos')
+  if (res.code === 200) memos.value = res.data || []
+  loading.value = false
 }
 
 onMounted(() => {
@@ -204,3 +278,10 @@ onMounted(() => {
   fetchMemos()
 })
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from,
+.fade-leave-to { opacity: 0; }
+</style>

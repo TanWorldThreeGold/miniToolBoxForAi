@@ -4,16 +4,12 @@ export default defineNuxtConfig({
   ssr: false,
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
   app: {
-    baseURL: '/miniToolBoxForAi/',
     head: {
       title: 'ToolBox - 个人效率工具箱',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       ],
     },
-  },
-  nitro: {
-    preset: 'github-pages',
   },
   supabase: {
     redirectOptions: {
