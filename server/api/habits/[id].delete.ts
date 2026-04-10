@@ -5,7 +5,6 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const client = await serverSupabaseClient(event)
 
-  await client.from('habit_checks').delete().eq('habit_id', id)
   const { error } = await client
     .from('habits')
     .delete()
