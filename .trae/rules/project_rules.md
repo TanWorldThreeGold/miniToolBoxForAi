@@ -9,13 +9,22 @@
 - **包管理**: npm
 - **API验证**: zod
 
+## 文档索引
+
+| 文档 | 路径 | 用途 |
+|------|------|------|
+| AI 快速参考 | `.trae/QUICK_REF.md` | AI 工作时快速查找关键文件 |
+| API 接口文档 | `docs/API.md` | 所有接口定义、类型、验证规则 |
+| 数据库文档 | `docs/DB.md` | 表结构、字段、关系 |
+| 代码模板 | `.trae/snippets/` | 新增模块的代码模板 |
+
 ## 代码规范
 
 ### TypeScript
 - 所有文件使用 `.ts` 扩展名
 - 显式定义接口类型，避免 `any`
 - 使用 `ref<T>()` 和 `reactive<T>()` 时指定泛型类型
-- 共享类型定义在 `types/index.ts`
+- 共享类型定义在 `types/index.ts`，页面中禁止重复定义
 
 ### Vue 组件
 - 使用 `<script setup lang="ts">` 语法
@@ -58,6 +67,11 @@ server/
 public/              # 静态资源
 types/               # 共享类型定义
 supabase/            # 数据库 schema.sql
+docs/                # API.md + DB.md
+.trae/
+  rules/             # project_rules.md
+  QUICK_REF.md       # AI 快速参考
+  snippets/          # 代码模板 (api-index-get/post, api-id-put/delete, page, validator)
 ```
 
 ## 开发命令
@@ -83,6 +97,7 @@ npm run preview  # 预览构建结果
 4. **删除确认**: 重要删除操作使用 `useConfirm()` 二次确认
 5. **移动端**: 布局已包含底部导航栏 (sm:hidden)
 6. **加密**: 备忘录使用 `useMemoEncrypt()` 进行客户端加密
+7. **类型**: 所有页面使用 `types/index.ts` 中的共享类型，禁止重复定义
 
 ## 部署
 

@@ -82,6 +82,8 @@
 </template>
 
 <script setup lang="ts">
+import type { Pomodoro } from '~/types'
+
 const { api } = useApi()
 
 const modes = [
@@ -96,7 +98,7 @@ const remaining = ref(durations.focus)
 const running = ref(false)
 const customMinutes = ref(10)
 const todayCount = ref(0)
-const history = ref<{ id: number; duration: number; created_at: string }[]>([])
+const history = ref<Pomodoro[]>([])
 let startDuration = durations.focus
 
 let timer: ReturnType<typeof setInterval> | null = null
