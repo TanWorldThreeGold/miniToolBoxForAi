@@ -1,15 +1,14 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">记账</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">记账</h1>
 
-    <!-- 添加/编辑记录 -->
-    <form @submit.prevent="submitExpense" class="bg-white border border-gray-200 rounded-xl p-4 mb-6 space-y-3">
+    <form @submit.prevent="submitExpense" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6 space-y-3">
       <div class="flex gap-2">
         <button
           type="button"
           @click="form.type = 'expense'"
           class="flex-1 py-2 rounded-lg text-sm font-medium transition"
-          :class="form.type === 'expense' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-gray-50 text-gray-500'"
+          :class="form.type === 'expense' ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
         >
           支出
         </button>
@@ -17,7 +16,7 @@
           type="button"
           @click="form.type = 'income'"
           class="flex-1 py-2 rounded-lg text-sm font-medium transition"
-          :class="form.type === 'income' ? 'bg-green-50 text-green-600 border border-green-200' : 'bg-gray-50 text-gray-500'"
+          :class="form.type === 'income' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
         >
           收入
         </button>
@@ -30,11 +29,11 @@
           min="0"
           placeholder="金额"
           required
-          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <select
           v-model="form.category"
-          class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
         >
           <option v-for="c in categories[form.type]" :key="c" :value="c">{{ c }}</option>
         </select>
@@ -44,18 +43,18 @@
           v-model="form.note"
           type="text"
           placeholder="备注（可选）"
-          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <input
           v-model="form.date"
           type="date"
-          class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
       <div class="flex gap-2">
         <button
           type="submit"
-          class="flex-1 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
+          class="flex-1 py-2 bg-accent text-white rounded-lg hover:opacity-90 transition"
         >
           {{ editingId ? '保存修改' : '添加' }}
         </button>
@@ -63,57 +62,76 @@
           v-if="editingId"
           type="button"
           @click="cancelEdit"
-          class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
         >
           取消
         </button>
       </div>
     </form>
 
-    <!-- 月份筛选 -->
     <div class="flex items-center gap-2 mb-4">
-      <button @click="changeMonth(-1)" class="p-1 hover:bg-gray-100 rounded transition">&lt;</button>
-      <span class="text-sm font-medium text-gray-700 min-w-[100px] text-center">{{ filterMonth || '全部' }}</span>
-      <button @click="changeMonth(1)" class="p-1 hover:bg-gray-100 rounded transition">&gt;</button>
+      <button @click="changeMonth(-1)" class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition text-gray-600 dark:text-gray-300">&lt;</button>
+      <span class="text-sm font-medium text-gray-700 dark:text-gray-200 min-w-[100px] text-center">{{ filterMonth || '全部' }}</span>
+      <button @click="changeMonth(1)" class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition text-gray-600 dark:text-gray-300">&gt;</button>
       <button
         v-if="filterMonth"
         @click="filterMonth = ''"
-        class="text-xs text-gray-400 hover:text-gray-600 ml-2"
+        class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-2"
       >
         显示全部
       </button>
+      <button
+        @click="exportData"
+        class="ml-auto text-xs text-accent hover:underline"
+      >
+        导出CSV
+      </button>
     </div>
 
-    <!-- 月度统计 -->
     <div class="grid grid-cols-3 gap-3 mb-6">
-      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
-        <p class="text-sm text-gray-500">收入</p>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400">收入</p>
         <p class="text-lg font-bold text-green-600">{{ totalIncome.toFixed(2) }}</p>
       </div>
-      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
-        <p class="text-sm text-gray-500">支出</p>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400">支出</p>
         <p class="text-lg font-bold text-red-500">{{ totalExpense.toFixed(2) }}</p>
       </div>
-      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
-        <p class="text-sm text-gray-500">结余</p>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400">结余</p>
         <p class="text-lg font-bold" :class="balance >= 0 ? 'text-green-600' : 'text-red-500'">
           {{ balance.toFixed(2) }}
         </p>
       </div>
     </div>
 
-    <!-- 记录列表 -->
+    <div v-if="categoryStats.length > 0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6">
+      <h3 class="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">支出分类</h3>
+      <div class="space-y-2">
+        <div v-for="cat in categoryStats" :key="cat.name" class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-300 w-16">{{ cat.name }}</span>
+          <div class="flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all"
+              :style="{ width: cat.percent + '%', backgroundColor: cat.color }"
+            ></div>
+          </div>
+          <span class="text-sm text-gray-500 dark:text-gray-400 w-20 text-right">{{ cat.amount.toFixed(2) }}</span>
+        </div>
+      </div>
+    </div>
+
     <div class="space-y-2">
       <div
         v-for="item in filteredExpenses"
         :key="item.id"
-        class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-3 group cursor-pointer hover:shadow-sm transition"
+        class="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 group cursor-pointer hover:shadow-sm transition"
         @click="editExpense(item)"
       >
         <div>
-          <span class="text-sm font-medium text-gray-900">{{ item.category }}</span>
-          <span v-if="item.note" class="text-sm text-gray-400 ml-2">{{ item.note }}</span>
-          <p class="text-xs text-gray-400 mt-0.5">{{ item.date }}</p>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.category }}</span>
+          <span v-if="item.note" class="text-sm text-gray-400 dark:text-gray-500 ml-2">{{ item.note }}</span>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ item.date }}</p>
         </div>
         <div class="flex items-center gap-3">
           <span
@@ -124,7 +142,7 @@
           </span>
           <button
             @click.stop="deleteExpense(item.id)"
-            class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+            class="text-gray-300 dark:text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
           >
             ✕
           </button>
@@ -147,9 +165,11 @@ const categories = {
   income: ['工资', '兼职', '投资', '红包', '其他'],
 }
 
+const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899']
+
 const today = new Date().toISOString().split('T')[0]
 const editingId = ref<number | null>(null)
-const filterMonth = ref(today.slice(0, 7)) // YYYY-MM
+const filterMonth = ref(today.slice(0, 7))
 
 const form = reactive({
   type: 'expense' as 'expense' | 'income',
@@ -174,6 +194,26 @@ const totalExpense = computed(() =>
   filteredExpenses.value.filter(e => e.type === 'expense').reduce((s, e) => s + Number(e.amount), 0)
 )
 const balance = computed(() => totalIncome.value - totalExpense.value)
+
+const categoryStats = computed(() => {
+  const expenseItems = filteredExpenses.value.filter(e => e.type === 'expense')
+  if (expenseItems.length === 0) return []
+
+  const grouped: Record<string, number> = {}
+  expenseItems.forEach(e => {
+    grouped[e.category] = (grouped[e.category] || 0) + Number(e.amount)
+  })
+
+  const total = Object.values(grouped).reduce((a, b) => a + b, 0)
+  return Object.entries(grouped)
+    .map(([name, amount], i) => ({
+      name,
+      amount,
+      percent: total > 0 ? (amount / total) * 100 : 0,
+      color: colors[i % colors.length],
+    }))
+    .sort((a, b) => b.amount - a.amount)
+})
 
 watch(() => form.type, (t) => {
   form.category = categories[t][0]
@@ -201,6 +241,26 @@ function cancelEdit() {
   form.date = today
   form.type = 'expense'
   form.category = '餐饮'
+}
+
+function exportData() {
+  const data = filteredExpenses.value.map(e => ({
+    日期: e.date,
+    类型: e.type === 'income' ? '收入' : '支出',
+    分类: e.category,
+    金额: e.amount,
+    备注: e.note,
+  }))
+  const headers = Object.keys(data[0] || {}).join(',')
+  const rows = data.map(d => Object.values(d).join(',')).join('\n')
+  const csv = headers + '\n' + rows
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `expense-${filterMonth.value || 'all'}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 async function fetchExpenses() {

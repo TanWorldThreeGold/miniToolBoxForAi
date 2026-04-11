@@ -7,6 +7,9 @@ create table if not exists public.todos (
   user_id uuid references auth.users(id) on delete cascade not null,
   title text not null,
   completed boolean default false not null,
+  priority text default 'medium' check (priority in ('high', 'medium', 'low')),
+  due_date date,
+  parent_id bigint references public.todos(id) on delete cascade,
   sort_order int default 0 not null,
   created_at timestamptz default now() not null
 );
@@ -66,6 +69,7 @@ create table if not exists public.habits (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
+  archived boolean default false not null,
   created_at timestamptz default now() not null
 );
 

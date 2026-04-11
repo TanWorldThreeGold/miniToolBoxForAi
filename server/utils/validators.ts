@@ -2,12 +2,17 @@ import { z } from 'zod'
 
 export const todoCreateSchema = z.object({
   title: z.string().min(1, '标题不能为空').max(200),
+  priority: z.enum(['high', 'medium', 'low']).default('medium'),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  parent_id: z.number().nullable().optional(),
 })
 
 export const todoUpdateSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   completed: z.boolean().optional(),
-}).refine(d => d.title !== undefined || d.completed !== undefined, '至少提供一个更新字段')
+  priority: z.enum(['high', 'medium', 'low']).optional(),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+}).refine(d => Object.keys(d).length > 0, '至少提供一个更新字段')
 
 export const diarySchema = z.object({
   title: z.string().min(1, '标题不能为空').max(200),
@@ -32,6 +37,11 @@ export const expenseCreateSchema = z.object({
 
 export const habitCreateSchema = z.object({
   name: z.string().min(1, '习惯名称不能为空').max(100),
+})
+
+export const habitUpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  archived: z.boolean().optional(),
 })
 
 export const habitCheckSchema = z.object({

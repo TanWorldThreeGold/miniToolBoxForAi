@@ -2,7 +2,11 @@ export interface Todo {
   id: number
   title: string
   completed: boolean
+  priority: 'high' | 'medium' | 'low'
+  due_date: string | null
+  parent_id: number | null
   sort_order: number
+  children?: Todo[]
 }
 
 export interface Diary {
@@ -30,11 +34,11 @@ export interface Expense {
 }
 
 export interface Habit {
-  id: number
+  id: string
   name: string
-  checkedToday: boolean
+  archived: boolean
   streak: number
-  last7: { date: string; label: string; checked: boolean }[]
+  last30: { date: string; checked: boolean }[]
 }
 
 export interface Pomodoro {

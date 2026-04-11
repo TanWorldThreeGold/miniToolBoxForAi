@@ -1,22 +1,19 @@
 import { serverSupabaseClient } from '#supabase/server'
 import { success, fail } from '~/server/utils/response'
-import { todoCreateSchema } from '~/server/utils/validators'
+import { habitUpdateSchema } from '~/server/utils/validators'
 
 export default defineEventHandler(async (event) => {
+  const id = getRouterParam(event, 'id')
   const body = await readBody(event)
-  const parsed = todoCreateSchema.safeParse(body)
+  const parsed = habitUpdateSchema.safeParse(body)
   if (!parsed.success) return fail(parsed.error.errors[0].message, 400)
 
   const client = await serverSupabaseClient(event)
   const { data, error } = await client
-    .from('todos')
-    .insert({
-      title: parsed.data.title,
-      user_id: event.context.user.id,
-      priority: parsed.data.priority,
-      due_date: parsed.data.due_date,
-      parent_id: parsed.data.parent_id,
-    })
+    .from('habits')
+    .update(parsed.data)
+    .eq('id', id)
+    .eq('user_id', event.context.user.id)
     .select()
     .single()
 
