@@ -1,3 +1,5 @@
+import { logger } from './logger'
+
 export interface ApiResponse<T = any> {
   code: number
   data: T | null
@@ -17,6 +19,6 @@ export function success<T>(data: T): ApiResponse<T> {
 
 export function fail(message: string, code = 500): ApiResponse<null> {
   const traceId = generateTraceId()
-  console.error(`[${new Date().toISOString()}] [ERROR] [${traceId}] ${message}`)
+  logger.error(message, traceId)
   return { code, data: null, message, traceId }
 }
