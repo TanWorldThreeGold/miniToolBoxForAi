@@ -1,6 +1,6 @@
 import { serverSupabaseClient } from '#supabase/server'
 import { success, fail } from '~/server/utils/response'
-import { countdownSchema } from './validators'
+import { countdownSchema } from '~/server/utils/validators'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
