@@ -1,13 +1,5 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
-interface LogEntry {
-  level: LogLevel
-  message: string
-  timestamp: string
-  traceId?: string
-  data?: any
-}
-
 const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
   info: 1,
@@ -17,52 +9,36 @@ const LOG_LEVELS: Record<LogLevel, number> = {
 
 const currentLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || 'info'
 
-function formatTimestamp(): string {
-  return new Date().toISOString()
-}
-
 function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[currentLevel]
 }
 
-function formatMessage(entry: LogEntry): string {
-  const prefix = `[${entry.timestamp}] [${entry.level.toUpperCase()}]`
-  const traceId = entry.traceId ? ` [${entry.traceId}]` : ''
-  const data = entry.data ? ` ${JSON.stringify(entry.data)}` : ''
-  return `${prefix}${traceId} ${entry.message}${data}`
+function formatMessage(level: LogLevel, message: string, traceId?: string): string {
+  const timestamp = new Date().toISOString()
+  const prefix = `[${timestamp}] [${level.toUpperCase()}]`
+  const trace = traceId ? ` [${traceId}]` : ''
+  return `${prefix}${trace} ${message}`
 }
 
 export const logger = {
-  debug(message: string, traceId?: string, data?: any) {
+  debug(message: string, traceId?: string) {
     if (!shouldLog('debug')) return
-    const entry: LogEntry = { level: 'debug', message, timestamp: formatTimestamp(), traceId, data }
-    console.debug(formatMessage(entry))
+    console.debug(formatMessage('debug', message, traceId))
   },
 
-  info(message: string, traceId?: string, data?: any) {
+  info(message: string, traceId?: string) {
     if (!shouldLog('info')) return
-    const entry: LogEntry = { level: 'info', message, timestamp: formatTimestamp(), traceId, data }
-    console.info(formatMessage(entry))
+    console.info(formatMessage('info', message, traceId))
   },
 
-  warn(message: string, traceId?: string, data?: any) {
+  warn(message: string, traceId?: string) {
     if (!shouldLog('warn')) return
-    const entry: LogEntry = { level: 'warn', message, timestamp: formatTimestamp(), traceId, data }
-    console.warn(formatMessage(entry))
+    console.warn(formatMessage('warn', message, traceId))
   },
 
-  error(message: string, traceId?: string, data?: any) {
+  error(message: string, traceId?: string) {
     if (!shouldLog('error')) return
-    const entry: LogEntry = { level: 'error', message, timestamp: formatTimestamp(), traceId, data }
-    console.error(formatMessage(entry))
-  },
-
-  request(method: string, path: string, traceId?: string) {
-    this.info(`${method} ${path}`, traceId)
-  },
-
-  response(method: string, path: string, status: number, duration: number, traceId?: string) {
-    this.info(`${method} ${path} -> ${status} (${duration}ms)`, traceId)
+    console.error(formatMessage('error', message, traceId))
   },
 }
 
