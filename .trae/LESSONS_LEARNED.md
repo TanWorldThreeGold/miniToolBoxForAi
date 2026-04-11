@@ -65,6 +65,37 @@
 
 ---
 
+## 错误 #4：导入路径错误导致构建失败
+
+**日期**：2026-04-11
+
+**错误信息**：
+```
+RollupError: Could not resolve "./validators" from "server/api/countdowns/index.post.ts"
+```
+
+**错误代码**：
+```typescript
+import { countdownSchema } from './validators'
+```
+
+**错误原因**：
+- `server/api/countdowns/` 目录下没有 `validators.ts` 文件
+- `countdownSchema` 实际定义在 `server/utils/validators.ts` 中
+- 导入路径错误
+
+**解决方案**：
+```typescript
+import { countdownSchema } from '~/server/utils/validators'
+```
+
+**教训**：
+- 新增 API 文件时，检查导入路径是否正确
+- validators 统一放在 `server/utils/validators.ts`
+- 不要在 API 目录下创建单独的 validators 文件
+
+---
+
 ## 复盘模板
 
 ```markdown
