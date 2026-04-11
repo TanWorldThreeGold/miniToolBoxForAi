@@ -90,6 +90,10 @@ const pcNavItems = [
   { to: '/pomodoro', icon: '🍅', label: '番茄钟' },
   { to: '/calculator', icon: '🧮', label: '计算器' },
   { to: '/currency', icon: '💱', label: '汇率' },
+  { to: '/password-generator', icon: '🔐', label: '密码' },
+  { to: '/unit-converter', icon: '📏', label: '单位' },
+  { to: '/qrcode', icon: '📱', label: '二维码' },
+  { to: '/countdown', icon: '📅', label: '倒计时' },
 ]
 
 const showBottomNav = computed(() => {

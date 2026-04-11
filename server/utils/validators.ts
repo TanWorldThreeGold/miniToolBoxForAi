@@ -43,3 +43,8 @@ export const habitCheckSchema = z.object({
 export const pomodoroCreateSchema = z.object({
   duration: z.number().int().min(1).max(7200),
 })
+
+export const countdownSchema = z.object({
+  title: z.string().min(1, '标题不能为空').max(100),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式错误'),
+})

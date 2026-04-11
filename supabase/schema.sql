@@ -97,3 +97,15 @@ create table if not exists public.pomodoros (
 alter table public.pomodoros enable row level security;
 create policy "Users manage own pomodoros" on public.pomodoros
   for all using (auth.uid() = user_id);
+
+-- ========== countdowns ==========
+create table if not exists public.countdowns (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  title text not null,
+  date date not null,
+  created_at timestamptz default now() not null
+);
+alter table public.countdowns enable row level security;
+create policy "Users manage own countdowns" on public.countdowns
+  for all using (auth.uid() = user_id);
