@@ -83,6 +83,16 @@ npm run generate # 静态生成
 npm run preview  # 预览构建结果
 ```
 
+### AI 执行命令说明
+
+由于 Windows PowerShell 执行策略限制，AI 执行 npm 命令时需使用 Git Bash：
+
+```bash
+bash -c "npm run build"    # 使用 Git Bash 执行构建
+bash -c "npm run dev"      # 使用 Git Bash 启动开发服务器
+bash -c "npm run lint"     # 使用 Git Bash 执行 lint
+```
+
 ## 提交规范
 
 - 提交前确保代码可运行
