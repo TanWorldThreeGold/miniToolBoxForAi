@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-md mx-auto">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">倒计时</纪念日</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">倒计时/纪念日</h1>
 
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-5">
       <div>
