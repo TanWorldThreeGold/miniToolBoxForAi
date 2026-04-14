@@ -46,3 +46,31 @@ export interface Pomodoro {
   duration: number
   created_at: string
 }
+
+export interface PlanItem {
+  id: number
+  plan_id: number
+  title: string
+  completed: boolean
+  sort_order: number
+  carried_from_report_id: number | null
+}
+
+export interface DailyPlan {
+  id: number
+  date: string
+  note: string
+  items?: PlanItem[]
+  created_at: string
+  updated_at: string
+}
+
+export interface DailyReport {
+  id: number
+  plan_id: number | null
+  date: string
+  auto_summary: string
+  content: string
+  created_at: string
+  updated_at: string
+}

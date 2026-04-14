@@ -113,3 +113,51 @@ create table if not exists public.countdowns (
 alter table public.countdowns enable row level security;
 create policy "Users manage own countdowns" on public.countdowns
   for all using (auth.uid() = user_id);
+
+-- ========== daily_plans ==========
+create table if not exists public.daily_plans (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  date date not null,
+  note text default '' not null,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null,
+  unique (user_id, date)
+);
+
+alter table public.daily_plans enable row level security;
+create policy "Users manage own daily_plans" on public.daily_plans
+  for all using (auth.uid() = user_id);
+
+-- ========== daily_reports ==========
+create table if not exists public.daily_reports (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  plan_id bigint references public.daily_plans(id) on delete set null,
+  date date not null,
+  auto_summary text default '' not null,
+  content text default '' not null,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null,
+  unique (user_id, date)
+);
+
+alter table public.daily_reports enable row level security;
+create policy "Users manage own daily_reports" on public.daily_reports
+  for all using (auth.uid() = user_id);
+
+-- ========== plan_items ==========
+create table if not exists public.plan_items (
+  id bigint generated always as identity primary key,
+  plan_id bigint references public.daily_plans(id) on delete cascade not null,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  title text not null,
+  completed boolean default false not null,
+  sort_order int default 0 not null,
+  carried_from_report_id bigint references public.daily_reports(id) on delete set null,
+  created_at timestamptz default now() not null
+);
+
+alter table public.plan_items enable row level security;
+create policy "Users manage own plan_items" on public.plan_items
+  for all using (auth.uid() = user_id);

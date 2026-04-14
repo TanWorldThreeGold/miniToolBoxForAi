@@ -16,6 +16,8 @@
 
 <script setup lang="ts">
 const tools = [
+  { to: '/daily-plan', icon: '📋', title: '日计划', description: '每日规划与执行打卡', bgColor: '#E0F2FE' },
+  { to: '/daily-report', icon: '📊', title: '日报', description: '自动生成每日工作报告', bgColor: '#F0FDF4' },
   { to: '/expense', icon: '💰', title: '记账', description: '收支记录与月度统计', bgColor: '#FEF3C7' },
   { to: '/todo', icon: '✅', title: 'TODO', description: '待办事项管理', bgColor: '#DBEAFE' },
   { to: '/diary', icon: '📝', title: '日记', description: '每日记录与心情', bgColor: '#FCE7F3' },

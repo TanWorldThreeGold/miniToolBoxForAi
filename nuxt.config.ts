@@ -15,8 +15,8 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
-      include: undefined,
-      exclude: ['/calculator', '/currency'],
+      include: [],
+      exclude: [],
       cookieRedirect: false,
     },
   },

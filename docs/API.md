@@ -144,3 +144,66 @@ interface Pomodoro { id: number; duration: number; created_at: string }
 
 ### 注意
 - GET 返回 count（今日完成数）+ history（最近50条记录）
+
+---
+
+## 日计划模块
+
+| 方法 | 路径 | 说明 | 请求体 | 响应 data |
+|------|------|------|--------|-----------|
+| GET | `/api/daily-plans?date=YYYY-MM-DD` | 获取单日计划(含条目) | - | `DailyPlan` 或列表 |
+| POST | `/api/daily-plans` | 创建计划 | `{ date, note?, items: [{title, sort_order}] }` | `DailyPlan` |
+| PUT | `/api/daily-plans/:id` | 更新备注 | `{ note }` | `DailyPlan` |
+| DELETE | `/api/daily-plans/:id` | 删除计划 | - | `null` |
+
+### 计划条目
+
+| 方法 | 路径 | 说明 | 请求体 | 响应 data |
+|------|------|------|--------|-----------|
+| POST | `/api/plan-items` | 添加条目 | `{ plan_id, title, sort_order? }` | `PlanItem` |
+| PUT | `/api/plan-items/:id` | 更新条目 | `{ title?, completed?, sort_order? }` | `PlanItem` |
+| DELETE | `/api/plan-items/:id` | 删除条目 | - | `null` |
+| POST | `/api/plan-items/batch` | 批量创建 | `{ plan_id, items: [{title, sort_order}] }` | `PlanItem[]` |
+
+### 类型
+```ts
+interface DailyPlan { id: number; date: string; note: string; items?: PlanItem[]; created_at: string; updated_at: string }
+interface PlanItem { id: number; plan_id: number; title: string; completed: boolean; sort_order: number; carried_from_report_id: number | null }
+```
+
+### 验证 Schema
+- 创建计划: `dailyPlanCreateSchema` — date YYYY-MM-DD, items 至少1项(title 1-200字)
+- 更新计划: `dailyPlanUpdateSchema` — note ≤1000
+- 创建条目: `planItemCreateSchema` — plan_id, title 1-200字
+- 更新条目: `planItemUpdateSchema` — title/completed/sort_order 至少一个
+- 批量创建: `planItemBatchSchema` — plan_id, items 至少1项
+
+### 注意
+- 每个用户每天只能有一个计划 (UNIQUE user_id+date)
+- GET 无 date 参数时返回最近30天列表
+
+---
+
+## 日报模块
+
+| 方法 | 路径 | 说明 | 请求体 | 响应 data |
+|------|------|------|--------|-----------|
+| GET | `/api/daily-reports?date=YYYY-MM-DD` | 获取单日日报 | - | `DailyReport` 或列表 |
+| POST | `/api/daily-reports/generate` | 生成日报+顺延 | `{ date, carry_forward_item_ids: number[] }` | `DailyReport` |
+| PUT | `/api/daily-reports/:id` | 编辑内容 | `{ content }` | `DailyReport` |
+| DELETE | `/api/daily-reports/:id` | 删除日报 | - | `null` |
+
+### 类型
+```ts
+interface DailyReport { id: number; plan_id: number | null; date: string; auto_summary: string; content: string; created_at: string; updated_at: string }
+```
+
+### 验证 Schema
+- 生成: `reportGenerateSchema` — date YYYY-MM-DD, carry_forward_item_ids 数字数组
+- 更新: `reportUpdateSchema` — content ≤10000
+
+### 生成逻辑
+1. 根据日期查当天计划和条目
+2. 自动生成完成情况摘要(auto_summary)
+3. 将选中的未完成条目顺延到明天计划
+4. 幂等：重复生成刷新摘要，保留已有 content

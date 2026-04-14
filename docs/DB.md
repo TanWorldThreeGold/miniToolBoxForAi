@@ -126,11 +126,69 @@ auth.users (Supabase Auth)
   ├── memos (user_id)
   ├── habits (user_id)
   │     └── habit_checks (habit_id, user_id)
-  └── pomodoros (user_id)
+  ├── pomodoros (user_id)
+  ├── daily_plans (user_id)
+  │     └── plan_items (plan_id, user_id)
+  └── daily_reports (user_id, plan_id→daily_plans)
 ```
+
+---
+
+### daily_plans
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | bigint | PK, auto | 主键 |
+| user_id | uuid | FK→auth.users, NOT NULL, CASCADE | 用户ID |
+| date | date | NOT NULL | 计划日期 |
+| note | text | DEFAULT '' | 备注 |
+| created_at | timestamptz | DEFAULT now() | 创建时间 |
+| updated_at | timestamptz | DEFAULT now() | 更新时间 |
+
+UNIQUE: `(user_id, date)`
+RLS: `auth.uid() = user_id`
+
+---
+
+### plan_items
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | bigint | PK, auto | 主键 |
+| plan_id | bigint | FK→daily_plans, NOT NULL, CASCADE | 所属计划 |
+| user_id | uuid | FK→auth.users, NOT NULL, CASCADE | 用户ID |
+| title | text | NOT NULL | 内容 |
+| completed | boolean | DEFAULT false | 是否完成 |
+| sort_order | int | DEFAULT 0 | 排序 |
+| carried_from_report_id | bigint | FK→daily_reports, SET NULL | 顺延来源 |
+| created_at | timestamptz | DEFAULT now() | 创建时间 |
+
+RLS: `auth.uid() = user_id`
+
+---
+
+### daily_reports
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | bigint | PK, auto | 主键 |
+| user_id | uuid | FK→auth.users, NOT NULL, CASCADE | 用户ID |
+| plan_id | bigint | FK→daily_plans, SET NULL | 关联计划 |
+| date | date | NOT NULL | 日报日期 |
+| auto_summary | text | DEFAULT '' | 自动生成摘要 |
+| content | text | DEFAULT '' | 手动补充内容 |
+| created_at | timestamptz | DEFAULT now() | 创建时间 |
+| updated_at | timestamptz | DEFAULT now() | 更新时间 |
+
+UNIQUE: `(user_id, date)`
+RLS: `auth.uid() = user_id`
+
+---
 
 ## 注意事项
 
 - 所有表都有 `ON DELETE CASCADE`，删除用户时自动清理
 - habits.id 是 uuid 类型，其他表 id 是 bigint
 - memos.content 可能存储加密后的 JSON 字符串
+- daily_plans 和 daily_reports 每个用户每天各只能有一条 (UNIQUE 约束)
+- plan_items.carried_from_report_id 记录条目是从哪个日报顺延过来的
