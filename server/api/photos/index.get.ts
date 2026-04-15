@@ -2,15 +2,13 @@ import { serverSupabaseClient } from '#supabase/server'
 import { success, fail } from '~/server/utils/response'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
   const client = await serverSupabaseClient(event)
-
-  const { error } = await client
-    .from('habits')
-    .delete()
-    .eq('id', id)
+  const { data, error } = await client
+    .from('photos')
+    .select('*')
     .eq('user_id', event.context.user.id)
+    .order('created_at', { ascending: false })
 
   if (error) return fail(error.message, 500, event)
-  return success(null, event)
+  return success(data, event)
 })

@@ -14,12 +14,12 @@ export default defineEventHandler(async (event) => {
       .eq('date', query.date)
       .single()
 
-    if (error && error.code === 'PGRST116') return success(null)
-    if (error) return fail(error.message)
+    if (error && error.code === 'PGRST116') return success(null, event)
+    if (error) return fail(error.message, 500, event)
     if (data?.plan_items) {
       data.plan_items.sort((a: any, b: any) => a.sort_order - b.sort_order)
     }
-    return success(data)
+    return success(data, event)
   }
 
   const { data, error } = await client
@@ -29,6 +29,6 @@ export default defineEventHandler(async (event) => {
     .order('date', { ascending: false })
     .limit(30)
 
-  if (error) return fail(error.message)
-  return success(data)
+  if (error) return fail(error.message, 500, event)
+  return success(data, event)
 })

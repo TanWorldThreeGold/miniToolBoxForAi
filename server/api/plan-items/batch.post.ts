@@ -5,7 +5,7 @@ import { planItemBatchSchema } from '~/server/utils/validators'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const parsed = planItemBatchSchema.safeParse(body)
-  if (!parsed.success) return fail(parsed.error.errors[0].message, 400)
+  if (!parsed.success) return fail(parsed.error.errors[0].message, 400, event)
 
   const client = await serverSupabaseClient(event)
   const userId = event.context.user.id
@@ -22,6 +22,6 @@ export default defineEventHandler(async (event) => {
     .insert(items)
     .select()
 
-  if (error) return fail(error.message)
-  return success(data)
+  if (error) return fail(error.message, 500, event)
+  return success(data, event)
 })

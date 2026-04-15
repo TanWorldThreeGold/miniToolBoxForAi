@@ -5,7 +5,7 @@ import { diarySchema } from '~/server/utils/validators'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const parsed = diarySchema.safeParse(body)
-  if (!parsed.success) return fail(parsed.error.errors[0].message, 400)
+  if (!parsed.success) return fail(parsed.error.errors[0].message, 400, event)
 
   const client = await serverSupabaseClient(event)
   const { data, error } = await client
@@ -17,6 +17,6 @@ export default defineEventHandler(async (event) => {
     .select()
     .single()
 
-  if (error) return fail(error.message)
-  return success(data)
+  if (error) return fail(error.message, 500, event)
+  return success(data, event)
 })

@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const importData: ImportData = body
 
   if (!importData.version || !importData.data) {
-    return fail('无效的导入数据格式', 400)
+    return fail('无效的导入数据格式', 400, event)
   }
 
   const results: Record<string, { success: number; failed: number }> = {}
@@ -33,6 +33,12 @@ export default defineEventHandler(async (event) => {
     const items = importData.data[table]
     if (!items || items.length === 0) {
       results[table] = { success: 0, failed: 0 }
+      continue
+    }
+
+    // Limit batch size per table to prevent timeout
+    if (items.length > 1000) {
+      results[table] = { success: 0, failed: items.length }
       continue
     }
 
@@ -48,5 +54,5 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  return success(results)
+  return success(results, event)
 })

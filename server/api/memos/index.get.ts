@@ -9,6 +9,6 @@ export default defineEventHandler(async (event) => {
     .eq('user_id', event.context.user.id)
     .order('updated_at', { ascending: false })
 
-  if (error) return fail(error.message)
-  return success(data)
+  if (error) return fail(error.message, 500, event)
+  return success(data, event)
 })

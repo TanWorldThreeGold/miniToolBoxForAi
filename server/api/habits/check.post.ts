@@ -5,7 +5,7 @@ import { habitCheckSchema } from '~/server/utils/validators'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const parsed = habitCheckSchema.safeParse(body)
-  if (!parsed.success) return fail(parsed.error.errors[0].message, 400)
+  if (!parsed.success) return fail(parsed.error.errors[0].message, 400, event)
 
   const client = await serverSupabaseClient(event)
 
@@ -13,15 +13,15 @@ export default defineEventHandler(async (event) => {
     const { error } = await client
       .from('habit_checks')
       .insert({ habit_id: parsed.data.habitId, user_id: event.context.user.id, date: parsed.data.date })
-    if (error) return fail(error.message)
+    if (error) return fail(error.message, 500, event)
   } else {
     const { error } = await client
       .from('habit_checks')
       .delete()
       .eq('habit_id', parsed.data.habitId)
       .eq('date', parsed.data.date)
-    if (error) return fail(error.message)
+    if (error) return fail(error.message, 500, event)
   }
 
-  return success(null)
+  return success(null, event)
 })

@@ -1,19 +1,19 @@
 import { serverSupabaseClient } from '#supabase/server'
 import { success, fail } from '~/server/utils/response'
-import { reportUpdateSchema } from '~/server/utils/validators'
+import { photoSchema } from '~/server/utils/validators'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
   const body = await readBody(event)
-  const parsed = reportUpdateSchema.safeParse(body)
+  const parsed = photoSchema.safeParse(body)
   if (!parsed.success) return fail(parsed.error.errors[0].message, 400, event)
 
   const client = await serverSupabaseClient(event)
   const { data, error } = await client
-    .from('daily_reports')
-    .update({ content: parsed.data.content, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .eq('user_id', event.context.user.id)
+    .from('photos')
+    .insert({
+      user_id: event.context.user.id,
+      ...parsed.data,
+    })
     .select()
     .single()
 

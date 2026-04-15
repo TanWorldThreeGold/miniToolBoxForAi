@@ -5,7 +5,7 @@ import { reportBatchGenerateSchema } from '~/server/utils/validators'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const parsed = reportBatchGenerateSchema.safeParse(body)
-  if (!parsed.success) return fail(parsed.error.issues[0].message)
+  if (!parsed.success) return fail(parsed.error.issues[0].message, 400, event)
 
   const client = await serverSupabaseClient(event)
   const userId = event.context.user.id
@@ -14,9 +14,9 @@ export default defineEventHandler(async (event) => {
   // Validate range
   const fromDate = new Date(from + 'T12:00:00')
   const toDate = new Date(to + 'T12:00:00')
-  if (toDate < fromDate) return fail('结束日期不能早于起始日期')
+  if (toDate < fromDate) return fail('结束日期不能早于起始日期', 400, event)
   const diffDays = Math.round((toDate.getTime() - fromDate.getTime()) / 86400000)
-  if (diffDays > 366) return fail('日期范围不能超过一年')
+  if (diffDays > 366) return fail('日期范围不能超过一年', 400, event)
 
   // 1. Get existing reports in range
   const { data: existing } = await client
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
       .gte('date', from)
       .lte('date', to)
       .order('date', { ascending: true })
-    return success({ generated: 0, reports: data })
+    return success({ generated: 0, reports: data }, event)
   }
 
   // 3. Fetch all plans for missing dates
@@ -95,7 +95,7 @@ export default defineEventHandler(async (event) => {
     .from('daily_reports')
     .insert(newReports)
 
-  if (insertErr) return fail('批量生成失败: ' + insertErr.message)
+  if (insertErr) return fail('批量生成失败: ' + insertErr.message, 500, event)
 
   // 6. Return all reports in range
   const { data: allReports } = await client
@@ -106,5 +106,5 @@ export default defineEventHandler(async (event) => {
     .lte('date', to)
     .order('date', { ascending: true })
 
-  return success({ generated: missingDates.length, reports: allReports })
+  return success({ generated: missingDates.length, reports: allReports }, event)
 })

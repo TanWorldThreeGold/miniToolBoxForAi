@@ -5,7 +5,7 @@ import { dailyPlanCreateSchema } from '~/server/utils/validators'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const parsed = dailyPlanCreateSchema.safeParse(body)
-  if (!parsed.success) return fail(parsed.error.errors[0].message, 400)
+  if (!parsed.success) return fail(parsed.error.errors[0].message, 400, event)
 
   const client = await serverSupabaseClient(event)
   const userId = event.context.user.id
@@ -18,8 +18,8 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (planError) {
-    if (planError.code === '23505') return fail('该日期已有计划，请编辑现有计划', 400)
-    return fail(planError.message)
+    if (planError.code === '23505') return fail('该日期已有计划，请编辑现有计划', 400, event)
+    return fail(planError.message, 500, event)
   }
 
   // Insert items
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
     .insert(items)
     .select()
 
-  if (itemsError) return fail(itemsError.message)
+  if (itemsError) return fail(itemsError.message, 500, event)
 
-  return success({ ...plan, plan_items: planItems })
+  return success({ ...plan, plan_items: planItems }, event)
 })

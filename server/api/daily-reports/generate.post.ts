@@ -5,11 +5,32 @@ import { reportGenerateSchema } from '~/server/utils/validators'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const parsed = reportGenerateSchema.safeParse(body)
-  if (!parsed.success) return fail(parsed.error.issues[0].message)
+  if (!parsed.success) return fail(parsed.error.issues[0].message, 400, event)
 
   const client = await serverSupabaseClient(event)
   const userId = event.context.user.id
-  const { date, carry_forward_item_ids } = parsed.data
+  const { date, carry_forward_item_ids, empty } = parsed.data
+
+  // Empty mode: create blank report
+  if (empty) {
+    const { data: existingReport } = await client
+      .from('daily_reports')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date', date)
+      .single()
+
+    if (existingReport) return success(existingReport, event)
+
+    const { data, error } = await client
+      .from('daily_reports')
+      .insert({ user_id: userId, date, auto_summary: '' })
+      .select()
+      .single()
+
+    if (error) return fail(error.message, 500, event)
+    return success(data, event)
+  }
 
   // 1. Fetch plan and items for this date
   const { data: plan } = await client
@@ -79,7 +100,7 @@ export default defineEventHandler(async (event) => {
           .insert({ user_id: userId, date: nextDateStr })
           .select()
           .single()
-        if (createErr) return fail('创建顺延计划失败: ' + createErr.message)
+        if (createErr) return fail('创建顺延计划失败: ' + createErr.message, 500, event)
         nextPlan = { ...created, plan_items: [] }
       }
 
@@ -101,7 +122,7 @@ export default defineEventHandler(async (event) => {
         .from('plan_items')
         .insert(carriedItems)
 
-      if (batchErr) return fail('顺延条目失败: ' + batchErr.message)
+      if (batchErr) return fail('顺延条目失败: ' + batchErr.message, 500, event)
     }
   }
 
@@ -122,7 +143,7 @@ export default defineEventHandler(async (event) => {
       .eq('user_id', userId)
       .select()
       .single()
-    if (error) return fail(error.message)
+    if (error) return fail(error.message, 500, event)
     report = data
   } else {
     const { data, error } = await client
@@ -130,9 +151,9 @@ export default defineEventHandler(async (event) => {
       .insert({ user_id: userId, date, plan_id: planId, auto_summary: autoSummary })
       .select()
       .single()
-    if (error) return fail(error.message)
+    if (error) return fail(error.message, 500, event)
     report = data
   }
 
-  return success(report)
+  return success(report, event)
 })

@@ -10,6 +10,6 @@ export default defineEventHandler(async (event) => {
     .order('date', { ascending: false })
     .order('created_at', { ascending: false })
 
-  if (error) return fail(error.message)
-  return success(data)
+  if (error) return fail(error.message, 500, event)
+  return success(data, event)
 })

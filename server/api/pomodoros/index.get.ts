@@ -19,11 +19,11 @@ export default defineEventHandler(async (event) => {
       .limit(50),
   ])
 
-  if (countResult.error) return fail(countResult.error.message)
-  if (historyResult.error) return fail(historyResult.error.message)
+  if (countResult.error) return fail(countResult.error.message, 500, event)
+  if (historyResult.error) return fail(historyResult.error.message, 500, event)
 
   return success({
     count: countResult.count || 0,
     history: historyResult.data || [],
-  })
+  }, event)
 })

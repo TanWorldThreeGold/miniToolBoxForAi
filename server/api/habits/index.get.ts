@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     .eq('user_id', event.context.user.id)
     .order('created_at')
 
-  if (habitsError) return fail(habitsError.message)
+  if (habitsError) return fail(habitsError.message, 500, event)
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
     .eq('user_id', event.context.user.id)
     .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
 
-  if (checksError) return fail(checksError.message)
+  if (checksError) return fail(checksError.message, 500, event)
 
-  return success({ habits: habitsData, checks: checks || [] })
+  return success({ habits: habitsData, checks: checks || [] }, event)
 })

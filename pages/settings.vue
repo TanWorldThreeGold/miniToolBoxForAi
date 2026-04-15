@@ -4,6 +4,22 @@
 
     <div class="space-y-6">
       <section class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+        <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">开发者</h2>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-700 dark:text-gray-200">API 文档</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">查看接口文档和 Schema 定义</p>
+          </div>
+          <NuxtLink
+            to="/api-docs"
+            class="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+          >
+            查看
+          </NuxtLink>
+        </div>
+      </section>
+
+      <section class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
         <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">数据管理</h2>
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -40,6 +56,38 @@
       </section>
 
       <section class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+        <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">开发者</h2>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-700 dark:text-gray-200">API 文档</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">查看接口文档和 Schema 定义</p>
+          </div>
+          <NuxtLink
+            to="/api-docs"
+            class="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+          >
+            查看
+          </NuxtLink>
+        </div>
+      </section>
+
+      <section class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+        <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">开发者</h2>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-700 dark:text-gray-200">API 文档</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">查看接口文档和 Schema 定义</p>
+          </div>
+          <NuxtLink
+            to="/api-docs"
+            class="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+          >
+            查看
+          </NuxtLink>
+        </div>
+      </section>
+
+      <section class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
         <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">主题设置</h2>
         <div class="flex items-center justify-between">
           <div>
@@ -56,6 +104,22 @@
               :class="isDark ? 'translate-x-7' : 'translate-x-1'"
             />
           </button>
+        </div>
+      </section>
+
+      <section class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+        <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">开发者</h2>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-700 dark:text-gray-200">API 文档</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">查看接口文档和 Schema 定义</p>
+          </div>
+          <NuxtLink
+            to="/api-docs"
+            class="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+          >
+            查看
+          </NuxtLink>
         </div>
       </section>
 

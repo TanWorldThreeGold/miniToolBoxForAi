@@ -15,13 +15,13 @@ export default defineEventHandler(async (event) => {
     client.from('pomodoros').select('*').eq('user_id', userId),
   ])
 
-  if (todosRes.error) return fail(todosRes.error.message)
-  if (diariesRes.error) return fail(diariesRes.error.message)
-  if (memosRes.error) return fail(memosRes.error.message)
-  if (expensesRes.error) return fail(expensesRes.error.message)
-  if (habitsRes.error) return fail(habitsRes.error.message)
-  if (habitChecksRes.error) return fail(habitChecksRes.error.message)
-  if (pomodorosRes.error) return fail(pomodorosRes.error.message)
+  if (todosRes.error) return fail(todosRes.error.message, 500, event)
+  if (diariesRes.error) return fail(diariesRes.error.message, 500, event)
+  if (memosRes.error) return fail(memosRes.error.message, 500, event)
+  if (expensesRes.error) return fail(expensesRes.error.message, 500, event)
+  if (habitsRes.error) return fail(habitsRes.error.message, 500, event)
+  if (habitChecksRes.error) return fail(habitChecksRes.error.message, 500, event)
+  if (pomodorosRes.error) return fail(pomodorosRes.error.message, 500, event)
 
   const exportData = {
     version: '1.0',
@@ -37,5 +37,5 @@ export default defineEventHandler(async (event) => {
     },
   }
 
-  return success(exportData)
+  return success(exportData, event)
 })
