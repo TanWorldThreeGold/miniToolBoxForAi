@@ -6,6 +6,13 @@ export function useApi() {
   async function api<T>(url: string, options?: Parameters<typeof $fetch>[1]): Promise<ApiResponse<T>> {
     try {
       const res = await $fetch<ApiResponse<T>>(url, options)
+      if (res.code === 401) {
+        showToast('登录已过期，请重新登录', 'error')
+        const client = useSupabaseClient()
+        await client.auth.signOut()
+        navigateTo('/login')
+        return res
+      }
       if (res.code !== 200) {
         showToast(`${res.message} [${res.traceId}]`, 'error')
       }

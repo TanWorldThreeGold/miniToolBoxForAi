@@ -98,6 +98,7 @@ export const planItemBatchSchema = z.object({
 export const reportGenerateSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式错误'),
   carry_forward_item_ids: z.array(z.number().int()).default([]),
+  empty: z.boolean().default(false),
 })
 
 export const reportUpdateSchema = z.object({
@@ -108,3 +109,15 @@ export const reportBatchGenerateSchema = z.object({
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '起始日期格式错误'),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '结束日期格式错误'),
 })
+
+// ========== 照片墙 ==========
+export const photoSchema = z.object({
+  url: z.string().min(1, '图片地址不能为空'),
+  title: z.string().max(200).default(''),
+  description: z.string().max(1000).default(''),
+})
+
+export const photoUpdateSchema = z.object({
+  title: z.string().max(200).optional(),
+  description: z.string().max(1000).optional(),
+}).refine(d => Object.keys(d).length > 0, '至少提供一个更新字段')
