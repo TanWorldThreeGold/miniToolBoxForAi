@@ -74,3 +74,17 @@ export interface DailyReport {
   created_at: string
   updated_at: string
 }
+
+export interface Photo {
+  id: number
+  url: string
+  title: string
+  description: string
+  created_at: string
+}
+
+export interface CountdownEvent {
+  id: number
+  title: string
+  date: string
+}

@@ -1,28 +1,28 @@
 <template>
   <div class="min-h-[70vh] flex items-center justify-center">
     <div class="w-full max-w-sm">
-      <h1 class="text-2xl font-bold text-gray-900 text-center mb-8">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-8">
         {{ isRegister ? '注册' : '登录' }} ToolBox
       </h1>
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">邮箱</label>
           <input
             v-model="email"
             type="email"
             required
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+            class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             placeholder="your@email.com"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">密码</label>
           <input
             v-model="password"
             type="password"
             required
             minlength="6"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+            class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             placeholder="至少6位"
           />
         </div>
@@ -31,12 +31,12 @@
         <button
           type="submit"
           :disabled="loading"
-          class="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
+          class="w-full py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-50"
         >
           {{ loading ? '处理中...' : (isRegister ? '注册' : '登录') }}
         </button>
       </form>
-      <p class="text-center text-sm text-gray-500 mt-4">
+      <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
         {{ isRegister ? '已有账号？' : '没有账号？' }}
         <button @click="toggleMode" class="text-accent hover:underline">
           {{ isRegister ? '去登录' : '去注册' }}

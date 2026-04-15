@@ -161,3 +161,29 @@ create table if not exists public.plan_items (
 alter table public.plan_items enable row level security;
 create policy "Users manage own plan_items" on public.plan_items
   for all using (auth.uid() = user_id);
+
+-- ========== photos ==========
+create table if not exists public.photos (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  url text not null,
+  title text default '' not null,
+  description text default '' not null,
+  created_at timestamptz default now() not null
+);
+
+alter table public.photos enable row level security;
+create policy "Users manage own photos" on public.photos
+  for all using (auth.uid() = user_id);
+
+-- ========== photos storage bucket ==========
+insert into storage.buckets (id, name, public) values ('photos', 'photos', true) on conflict do nothing;
+
+create policy "Users can upload photos" on storage.objects
+  for insert with check (bucket_id = 'photos' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "Users can view own photos" on storage.objects
+  for select using (bucket_id = 'photos');
+
+create policy "Users can delete own photos" on storage.objects
+  for delete using (bucket_id = 'photos' and auth.uid()::text = (storage.foldername(name))[1]);

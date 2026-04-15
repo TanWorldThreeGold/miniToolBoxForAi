@@ -244,15 +244,15 @@ function cancelEdit() {
 }
 
 function exportData() {
-  const data = filteredExpenses.value.map(e => ({
-    日期: e.date,
-    类型: e.type === 'income' ? '收入' : '支出',
-    分类: e.category,
-    金额: e.amount,
-    备注: e.note,
-  }))
-  const headers = Object.keys(data[0] || {}).join(',')
-  const rows = data.map(d => Object.values(d).join(',')).join('\n')
+  const data = filteredExpenses.value.map(e => ([
+    e.date,
+    e.type === 'income' ? '收入' : '支出',
+    e.category,
+    String(e.amount),
+    `"${(e.note || '').replace(/"/g, '""')}"`,
+  ]))
+  const headers = '日期,类型,分类,金额,备注'
+  const rows = data.map(d => d.join(',')).join('\n')
   const csv = headers + '\n' + rows
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -283,11 +283,14 @@ async function submitExpense() {
     }
   } else {
     const res = await api<Expense>('/api/expenses', { method: 'POST', body })
-    if (res.code === 200 && res.data) {
-      expenses.value.unshift(res.data)
-      form.amount = null
-      form.note = ''
-    }
+      if (res.code === 200 && res.data) {
+        expenses.value.unshift(res.data)
+        form.amount = null
+        form.note = ''
+        form.type = 'expense'
+        form.category = '餐饮'
+        form.date = today
+      }
   }
 }
 

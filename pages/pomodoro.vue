@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-sm mx-auto text-center">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">番茄钟</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">番茄钟</h1>
 
     <!-- 模式切换 -->
     <div class="flex gap-2 mb-8 justify-center">
@@ -9,28 +9,28 @@
         :key="m.key"
         @click="switchMode(m.key)"
         class="px-4 py-1.5 rounded-lg text-sm font-medium transition"
-        :class="mode === m.key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+        :class="mode === m.key ? 'bg-gray-900 dark:bg-gray-700 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'"
       >
         {{ m.label }}
       </button>
     </div>
 
     <!-- 计时器 -->
-    <div class="bg-white border border-gray-200 rounded-2xl p-8 mb-6">
-      <p class="text-6xl font-mono font-bold text-gray-900">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 mb-6">
+      <p class="text-6xl font-mono font-bold text-gray-900 dark:text-white">
         {{ formatTime(remaining) }}
       </p>
       <div class="flex gap-3 justify-center mt-6">
         <button
           @click="toggle"
           class="px-8 py-2.5 rounded-lg font-medium transition"
-          :class="running ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-900 text-white hover:bg-gray-800'"
+          :class="running ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50' : 'bg-gray-900 dark:bg-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-600'"
         >
           {{ running ? '暂停' : '开始' }}
         </button>
         <button
           @click="reset"
-          class="px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
         >
           重置
         </button>
@@ -38,19 +38,19 @@
     </div>
 
     <!-- 自定义倒计时 -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4 mb-6">
-      <p class="text-sm font-medium text-gray-700 mb-2">自定义倒计时（分钟）</p>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">自定义倒计时（分钟）</p>
       <div class="flex gap-2 justify-center">
         <input
           v-model.number="customMinutes"
           type="number"
           min="1"
           max="120"
-          class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-accent"
+          class="w-20 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-center text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           @click="startCustom"
-          class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition text-sm"
+          class="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition text-sm"
         >
           开始
         </button>
@@ -58,22 +58,22 @@
     </div>
 
     <!-- 今日统计 -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4 mb-6">
-      <p class="text-sm text-gray-500">今日完成</p>
-      <p class="text-2xl font-bold text-gray-900">{{ todayCount }} 个番茄</p>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6">
+      <p class="text-sm text-gray-500 dark:text-gray-400">今日完成</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ todayCount }} 个番茄</p>
     </div>
 
     <!-- 历史记录 -->
     <div class="text-left">
-      <h2 class="font-medium text-gray-900 mb-3">最近记录</h2>
+      <h2 class="font-medium text-gray-900 dark:text-white mb-3">最近记录</h2>
       <div class="space-y-2">
         <div
           v-for="item in history"
           :key="item.id"
-          class="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm"
+          class="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-sm"
         >
-          <span class="text-gray-500">{{ formatDate(item.created_at) }}</span>
-          <span class="font-medium text-gray-900">{{ item.duration }} 分钟</span>
+          <span class="text-gray-500 dark:text-gray-400">{{ formatDate(item.created_at) }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{ item.duration }} 分钟</span>
         </div>
         <p v-if="history.length === 0" class="text-gray-400 text-center py-4 text-sm">暂无记录</p>
       </div>

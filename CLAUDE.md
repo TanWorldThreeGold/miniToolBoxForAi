@@ -7,12 +7,6 @@
 - zod (API 输入验证)
 - 部署目标: Vercel（含 server/api 后端接口）
 
-## 快速参考
-- **AI 快速参考**: `.trae/QUICK_REF.md`
-- **API 接口文档**: `docs/API.md`
-- **数据库文档**: `docs/DB.md`
-- **代码模板**: `.trae/snippets/`
-
 ## 项目结构
 ```
 pages/              → 前端页面 (todo/diary/memo/expense/habits/pomodoro/login/calculator/currency)
@@ -24,8 +18,6 @@ components/         → Toast.vue / ToolCard.vue / ConfirmDialog.vue
 layouts/            → default.vue (挂载 Toast + ConfirmDialog + 移动端底部导航)
 types/              → index.ts (共享类型: Todo/Diary/Memo/Expense/Habit/Pomodoro)
 supabase/           → schema.sql (数据库建表 SQL + RLS 策略)
-docs/               → API.md (接口文档) / DB.md (数据库文档)
-.trae/snippets/     → 代码模板 (api-route/page/validator)
 ```
 
 ## 接口约定
@@ -75,4 +67,3 @@ async function deleteItem(id: number) {
 - 备忘录支持客户端 AES-GCM 加密 (composables/useMemoEncrypt.ts)
 - 所有删除操作需二次确认 (useConfirm + ConfirmDialog)
 - 乐观更新需带回滚机制（保存 prev 状态，失败时恢复）
-- 部署到 Vercel，支持 Serverless API

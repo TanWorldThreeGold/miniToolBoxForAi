@@ -26,5 +26,6 @@ const tools = [
   { to: '/habits', icon: '🎯', title: '习惯打卡', description: '每日习惯追踪', bgColor: '#D1FAE5' },
   { to: '/currency', icon: '💱', title: '汇率换算', description: '实时货币转换', bgColor: '#FEF9C3' },
   { to: '/memo', icon: '🔑', title: '密码 & 备忘', description: '密码生成与备忘录', bgColor: '#F3E8FF' },
+  { to: '/photos', icon: '📷', title: '照片墙', description: '照片存储与展示', bgColor: '#FFF7ED' },
 ]
 </script>

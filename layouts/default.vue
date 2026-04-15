@@ -83,6 +83,7 @@ const navItems = [
   { to: '/todo', icon: '✅', label: 'TODO' },
   { to: '/expense', icon: '💰', label: '记账' },
   { to: '/diary', icon: '📝', label: '日记' },
+  { to: '/photos', icon: '📷', label: '照片墙' },
   { to: '/pomodoro', icon: '🍅', label: '番茄钟' },
 ]
 
@@ -92,6 +93,7 @@ const pcNavItems = [
   { to: '/todo', icon: '✅', label: 'TODO' },
   { to: '/expense', icon: '💰', label: '记账' },
   { to: '/diary', icon: '📝', label: '日记' },
+  { to: '/photos', icon: '📷', label: '照片墙' },
   { to: '/memo', icon: '🔑', label: '备忘' },
   { to: '/habits', icon: '🎯', label: '习惯' },
   { to: '/pomodoro', icon: '🍅', label: '番茄钟' },

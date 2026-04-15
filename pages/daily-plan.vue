@@ -391,7 +391,8 @@ async function addItem() {
   const title = addItemTitle.value.trim()
   if (!title || !plan.value) return
   if (!await confirmIfPast()) return
-  const sortOrder = (plan.value.items?.length || 0)
+  const maxOrder = (plan.value.items || []).reduce((max, i) => Math.max(max, i.sort_order), -1)
+  const sortOrder = maxOrder + 1
   const res = await api<PlanItem>('/api/plan-items', {
     method: 'POST',
     body: { plan_id: plan.value.id, title, sort_order: sortOrder },
@@ -405,6 +406,7 @@ async function addItem() {
 async function deleteItem(id: number) {
   if (!plan.value) return
   if (!await confirmIfPast()) return
+  if (!await confirm('确定删除该计划项？')) return
   const prev = plan.value.items || []
   plan.value.items = prev.filter(i => i.id !== id)
   const res = await api(`/api/plan-items/${id}`, { method: 'DELETE' })

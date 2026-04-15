@@ -1,27 +1,27 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">日记</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">日记</h1>
       <button
         v-if="!editing"
         @click="startNew"
-        class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition text-sm"
+        class="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition text-sm"
       >
         写日记
       </button>
     </div>
 
     <!-- 编辑 -->
-    <div v-if="editing" class="bg-white border border-gray-200 rounded-xl p-4 mb-6 space-y-3">
+    <div v-if="editing" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6 space-y-3">
       <div class="flex gap-2">
         <input
           v-model="form.date"
           type="date"
-          class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <select
           v-model="form.mood"
-          class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
         >
           <option value="">选择心情</option>
           <option value="😊">😊 开心</option>
@@ -35,24 +35,24 @@
         v-model="form.title"
         type="text"
         placeholder="标题（可选）"
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+        class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
       />
       <textarea
         v-model="form.content"
         rows="8"
         placeholder="今天发生了什么..."
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+        class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent resize-none"
       />
       <div class="flex gap-2">
         <button
           @click="saveDiary"
-          class="flex-1 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
+          class="flex-1 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition"
         >
           保存
         </button>
         <button
           @click="editing = false"
-          class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
         >
           取消
         </button>
@@ -65,7 +65,7 @@
         v-model="searchQuery"
         type="text"
         placeholder="搜索日记..."
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+        class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
       />
     </div>
 
@@ -74,23 +74,23 @@
       <div
         v-for="d in filteredDiaries"
         :key="d.id"
-        class="bg-white border border-gray-200 rounded-xl p-4 group cursor-pointer hover:shadow-sm transition"
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 group cursor-pointer hover:shadow-sm transition"
         @click="editDiary(d)"
       >
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-400">{{ d.date }}</span>
+            <span class="text-sm text-gray-400 dark:text-gray-500">{{ d.date }}</span>
             <span v-if="d.mood">{{ d.mood }}</span>
           </div>
           <button
             @click.stop="deleteDiary(d.id)"
-            class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+            class="text-gray-300 dark:text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
           >
             ✕
           </button>
         </div>
-        <h3 v-if="d.title" class="font-medium text-gray-900 mb-1">{{ d.title }}</h3>
-        <p class="text-sm text-gray-600 line-clamp-3 whitespace-pre-wrap">{{ d.content }}</p>
+        <h3 v-if="d.title" class="font-medium text-gray-900 dark:text-white mb-1">{{ d.title }}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 whitespace-pre-wrap">{{ d.content }}</p>
       </div>
       <p v-if="loading" class="text-gray-400 text-center py-8">加载中...</p>
       <p v-else-if="filteredDiaries.length === 0 && !editing" class="text-gray-400 text-center py-8">

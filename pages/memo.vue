@@ -1,30 +1,30 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">密码 & 备忘</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">密码 & 备忘</h1>
 
     <!-- 密码生成器 -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4 mb-6">
-      <h2 class="font-medium text-gray-900 mb-3">密码生成器</h2>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6">
+      <h2 class="font-medium text-gray-900 dark:text-white mb-3">密码生成器</h2>
       <div class="flex gap-2 mb-3">
         <input
           :value="generatedPassword"
           readonly
-          class="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg font-mono text-sm"
+          class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm text-gray-900 dark:text-white"
         />
         <button
           @click="copyPassword"
-          class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm text-gray-700 dark:text-gray-200"
         >
           {{ copied ? '已复制' : '复制' }}
         </button>
         <button
           @click="generatePassword"
-          class="px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition text-sm"
+          class="px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition text-sm"
         >
           生成
         </button>
       </div>
-      <div class="flex items-center gap-4 text-sm text-gray-600">
+      <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
         <label class="flex items-center gap-1">
           长度
           <input
@@ -32,7 +32,7 @@
             type="number"
             min="8"
             max="64"
-            class="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+            class="w-16 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
             @change="generatePassword"
           />
         </label>
@@ -50,29 +50,29 @@
 
     <!-- 备忘录 -->
     <div class="flex items-center justify-between mb-4">
-      <h2 class="font-medium text-gray-900">备忘录</h2>
+      <h2 class="font-medium text-gray-900 dark:text-white">备忘录</h2>
       <button
         @click="addMemo"
-        class="px-3 py-1.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition text-sm"
+        class="px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition text-sm"
       >
         新建
       </button>
     </div>
 
-    <div v-if="editingMemo" class="bg-white border border-gray-200 rounded-xl p-4 mb-4 space-y-3">
+    <div v-if="editingMemo" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-4 space-y-3">
       <input
         v-model="editingMemo.title"
         type="text"
         placeholder="标题"
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+        class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
       />
       <textarea
         v-model="editingMemo.content"
         rows="4"
         placeholder="内容..."
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+        class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent resize-none"
       />
-      <label class="flex items-center gap-2 text-sm text-gray-600">
+      <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
         <input v-model="editingMemo.encrypted" type="checkbox" />
         加密存储（需设置密码）
       </label>
@@ -81,19 +81,19 @@
           v-model="encryptPassword"
           type="password"
           placeholder="设置加密密码"
-          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+          class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-sm text-gray-900 dark:text-white"
         />
       </div>
       <div class="flex gap-2">
         <button
           @click="saveMemo"
-          class="flex-1 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
+          class="flex-1 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition"
         >
           保存
         </button>
         <button
           @click="editingMemo = null"
-          class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
         >
           取消
         </button>
@@ -105,19 +105,19 @@
       <Transition name="fade">
         <div v-if="decryptPrompt" class="fixed inset-0 z-50 flex items-center justify-center">
           <div class="absolute inset-0 bg-black/30" @click="decryptPrompt = null" />
-          <div class="relative bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
-            <p class="text-gray-900 font-medium">输入解密密码</p>
+          <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
+            <p class="text-gray-900 dark:text-white font-medium">输入解密密码</p>
             <input
               v-model="decryptInput"
               type="password"
               placeholder="密码"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
               @keyup.enter="doDecrypt"
             />
             <p v-if="decryptError" class="text-sm text-red-500">密码错误</p>
             <div class="flex gap-3">
-              <button @click="decryptPrompt = null" class="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">取消</button>
-              <button @click="doDecrypt" class="flex-1 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition">解密</button>
+              <button @click="decryptPrompt = null" class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition">取消</button>
+              <button @click="doDecrypt" class="flex-1 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition">解密</button>
             </div>
           </div>
         </div>
@@ -128,22 +128,22 @@
       <div
         v-for="m in memos"
         :key="m.id"
-        class="bg-white border border-gray-200 rounded-lg px-4 py-3 group cursor-pointer hover:shadow-sm transition"
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 group cursor-pointer hover:shadow-sm transition"
         @click="openMemo(m)"
       >
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span v-if="m.encrypted" class="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">加密</span>
-            <h3 class="font-medium text-gray-900">{{ m.title || '无标题' }}</h3>
+            <span v-if="m.encrypted" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-1.5 py-0.5 rounded">加密</span>
+            <h3 class="font-medium text-gray-900 dark:text-white">{{ m.title || '无标题' }}</h3>
           </div>
           <button
             @click.stop="deleteMemo(m.id)"
-            class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+            class="text-gray-300 dark:text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
           >
             ✕
           </button>
         </div>
-        <p class="text-sm text-gray-500 mt-1 line-clamp-2">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
           {{ m.encrypted ? '******' : m.content }}
         </p>
       </div>

@@ -65,11 +65,10 @@
 </template>
 
 <script setup lang="ts">
-interface CountdownEvent {
-  id: number
-  title: string
-  date: string
-}
+import type { CountdownEvent } from '~/types'
+
+const { api } = useApi()
+const { confirm } = useConfirm()
 
 const newEvent = ref({
   title: '',
@@ -97,37 +96,32 @@ function getDaysRemaining(dateStr: string): number {
 
 async function fetchEvents() {
   loading.value = true
-  const res = await $fetch<CountdownEvent[]>('/api/countdowns')
-  if (res.code === 200) {
-    events.value = res.data || []
-  }
+  const res = await api<CountdownEvent[]>('/api/countdowns')
+  if (res.code === 200) events.value = res.data || []
   loading.value = false
 }
 
 async function addCountdown() {
   if (!newEvent.value.title.trim() || !newEvent.value.date) return
 
-  const res = await $fetch<CountdownEvent>('/api/countdowns', {
+  const res = await api<CountdownEvent>('/api/countdowns', {
     method: 'POST',
     body: newEvent.value,
   })
 
-  if (res.code === 200) {
+  if (res.code === 200 && res.data) {
     events.value.unshift(res.data)
-    newEvent.title = ''
-    newEvent.date = ''
+    newEvent.value.title = ''
+    newEvent.value.date = ''
   }
 }
 
 async function deleteEvent(id: number) {
+  if (!await confirm('确定删除该纪念日？')) return
   const prev = events.value
   events.value = events.value.filter(e => e.id !== id)
-
-  const res = await $fetch(`/api/countdowns/${id}`, { method: 'DELETE' })
-
-  if (res.code !== 200) {
-    events.value = prev
-  }
+  const res = await api(`/api/countdowns/${id}`, { method: 'DELETE' })
+  if (res.code !== 200) events.value = prev
 }
 
 onMounted(fetchEvents)

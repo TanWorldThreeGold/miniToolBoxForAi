@@ -255,7 +255,11 @@
           <span class="text-xs text-gray-400">{{ rangeReports.length }} 份日报</span>
         </div>
         <div class="divide-y divide-gray-100 dark:divide-gray-700">
-          <div v-for="r in rangeReports" :key="r.id" class="px-5 py-4">
+          <div v-for="r in rangeReports" :key="r.id" class="px-5 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition" @click="viewRangeReport(r)">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ r.date }}</span>
+              <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
             <div class="text-sm leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300">{{ r.auto_summary }}</div>
             <div v-if="r.content" class="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
               <p class="text-xs text-gray-400 mb-1">补充内容</p>
@@ -407,10 +411,19 @@ async function doGenerate(carryIds: number[]) {
 async function createEmptyReport() {
   if (generating.value) return
   generating.value = true
+  loading.value = true
   try {
-    await doGenerate([])
+    // Create a report with empty auto_summary, not generate from plan
+    const res = await api<DailyReport>('/api/daily-reports/generate', {
+      method: 'POST',
+      body: { date: selectedDate.value, carry_forward_item_ids: [], empty: true },
+    })
+    if (res.code === 200 && res.data) {
+      report.value = res.data
+    }
   } finally {
     generating.value = false
+    loading.value = false
   }
 }
 
@@ -555,6 +568,12 @@ async function copyRangeMarkdown() {
   } catch {
     showToast('复制失败，请手动选择复制', 'error')
   }
+}
+
+function viewRangeReport(r: DailyReport) {
+  viewMode.value = 'single'
+  selectedDate.value = r.date
+  nextTick(() => fetchReport())
 }
 
 onMounted(fetchReport)
