@@ -1,0 +1,120 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-04-15T02:20:51.237Z
+provider: 
+---
+
+# ToolBox 项目开发规范
+
+## 技术栈
+- Nuxt 3 (SPA 模式, ssr: false)
+- @nuxtjs/supabase (认证 + 数据库)
+- Tailwind CSS
+- zod (API 输入验证)
+- 部署目标: Vercel（含 server/api 后端接口）
+
+## 关键文件速查
+
+| 需求 | 文件 |
+|------|------|
+| 类型定义 | `types/index.ts` |
+| API 响应格式 | `server/utils/response.ts` |
+| 验证 Schema | `server/utils/validators.ts` |
+| 认证中间件 | `server/middleware/auth.ts` |
+| 前端请求封装 | `composables/useApi.ts` |
+| 删除确认 | `composables/useConfirm.ts` |
+| 数据库 Schema | `supabase/schema.sql` |
+
+## 模块映射
+
+| 模块 | 页面 | API 目录 | 类型 |
+|------|------|----------|------|
+| TODO | `pages/todo.vue` | `server/api/todos/` | `Todo` |
+| 记账 | `pages/expense.vue` | `server/api/expenses/` | `Expense` |
+| 日记 | `pages/diary.vue` | `server/api/diaries/` | `Diary` |
+| 备忘录 | `pages/memo.vue` | `server/api/memos/` | `Memo` |
+| 习惯打卡 | `pages/habits.vue` | `server/api/habits/` | `Habit` |
+| 番茄钟 | `pages/pomodoro.vue` | `server/api/pomodoros/` | `Pomodoro` |
+| 照片墙 | `pages/photos.vue` | `server/api/photos/` | `Photo` |
+| 计算器 | `pages/calculator.vue` | 无 | - |
+| 汇率换算 | `pages/currency.vue` | 无 | - |
+
+## 代码规范
+
+### TypeScript
+- 显式定义接口类型，避免 `any`
+- 共享类型定义在 `types/index.ts`，页面中禁止重复定义
+
+### Vue 组件
+- 使用 `<script setup lang="ts">` 语法
+- 优先使用 Tailwind CSS 工具类
+
+### API 开发
+- 统一响应格式: `{ code, data, message, traceId }`
+- 后端用 `success(data)` / `fail(message)` 返回
+- 前端用 `useApi()` 的 `api<T>(url, options)` 调用
+- 认证通过中间件统一处理，handler 中用 `event.context.user` 获取用户
+- 所有 POST/PUT 接口使用 zod schema 验证输入
+
+## 安全规范
+- 禁止客户端密码哈希，直接传原始密码给 Supabase
+- API 端点通过中间件统一认证
+- 数据库操作必须包含 `.eq('user_id', user.id)` 或使用 RLS 策略
+
+## 开发注意事项
+1. 乐观更新: UI 更新后 API 失败时需要有回滚机制
+2. Loading 状态: 数据获取时显示加载指示器
+3. 错误处理: 使用 `useApi()` 统一处理，显示 Toast 提示
+4. 删除确认: 重要删除操作使用 `useConfirm()` 二次确认
+5. 类型: 所有页面使用 `types/index.ts` 中的共享类型，禁止重复定义
+6. 数据库变更: 新增表/字段只往 `supabase/schema.sql` 末尾追加 SQL，由用户手动到 Supabase 执行
+
+## 提交规范
+- 提交前确保代码可运行
+- 不提交 `.env` 文件
+- 禁止自动提交推送：只有用户发出提交指令时才执行 git commit/push
+- 禁止自动构建测试：用户发出提交指令后再执行 build 验证
+
+## 新增模块模板
+
+### API 路由
+```ts
+// server/api/xxx/index.get.ts
+import { serverSupabaseClient } from '#supabase/server'
+import { success, fail } from '~/server/utils/response'
+
+export default defineEventHandler(async (event) => {
+  const client = await serverSupabaseClient(event)
+  // ... 业务逻辑
+})
+```
+
+### 页面调用
+```ts
+import type { MyType } from '~/types'
+
+const { api } = useApi()
+const { confirm } = useConfirm()
+
+const res = await api<T>('/api/xxx', { method: 'POST', body: { ... } })
+if (res.code === 200 && res.data) { /* 成功 */ }
+
+// 删除操作需确认 + 乐观更新回滚
+async function deleteItem(id: number) {
+  if (!await confirm('确定删除？')) return
+  const prev = items.value
+  items.value = items.value.filter(i => i.id !== id)
+  const res = await api('/api/xxx/' + id, { method: 'DELETE' })
+  if (res.code !== 200) items.value = prev
+}
+```
+
+## 常见构建错误
+
+| 错误 | 原因 | 解决方案 |
+|------|------|----------|
+| Vue template syntax error | 模板中包含 `<` `>` `/` 特殊字符 | 检查模板文本 |
+| Module not found | 导入路径错误 | 检查相对路径 |
+| Type error | TypeScript 类型错误 | 检查类型定义 |
