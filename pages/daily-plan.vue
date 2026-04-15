@@ -21,9 +21,49 @@
     <!-- 无计划态：创建表单 -->
     <div v-else-if="!plan && !creating" class="text-center py-12">
       <p class="text-gray-400 mb-4">{{ selectedDate }} 暂无计划</p>
-      <button @click="creating = true" class="px-6 py-2 bg-accent text-white rounded-lg hover:opacity-90 transition">
-        创建计划
-      </button>
+      <div class="flex flex-col items-center gap-3">
+        <button @click="creating = true" class="px-6 py-2 bg-accent text-white rounded-lg hover:opacity-90 transition">
+          创建计划
+        </button>
+        <div class="flex items-center gap-2">
+          <button
+            @click="copyFromPreviousDay"
+            :disabled="copying"
+            class="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition disabled:opacity-50"
+          >
+            {{ copying ? '复制中...' : '复制前一天计划' }}
+          </button>
+          <button
+            @click="showCopyPicker = true"
+            class="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          >
+            选择日期复制
+          </button>
+        </div>
+      </div>
+
+      <!-- 日期选择弹窗 -->
+      <div v-if="showCopyPicker" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" @click.self="showCopyPicker = false">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-80 shadow-xl space-y-4">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">选择要复制的日期</h3>
+          <input
+            v-model="copySourceDate"
+            type="date"
+            class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+          />
+          <div class="flex gap-2">
+            <button
+              @click="showCopyPicker = false"
+              class="flex-1 py-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >取消</button>
+            <button
+              @click="copyFromDate(copySourceDate)"
+              :disabled="!copySourceDate || copying"
+              class="flex-1 py-2 bg-accent text-white rounded-lg hover:opacity-90 transition disabled:opacity-50"
+            >{{ copying ? '复制中...' : '确认复制' }}</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 创建计划表单 -->
@@ -147,10 +187,10 @@
       <!-- 操作按钮 -->
       <div class="flex gap-3 pt-2">
         <NuxtLink
-          :to="`/daily-report?date=${selectedDate}&generate=true`"
+          :to="hasReport ? `/daily-report?date=${selectedDate}` : `/daily-report?date=${selectedDate}&generate=true`"
           class="flex-1 py-2 bg-gray-900 dark:bg-gray-700 text-white text-center rounded-lg hover:opacity-90 transition"
         >
-          生成日报 →
+          {{ hasReport ? '查看日报 →' : '生成日报 →' }}
         </NuxtLink>
         <button
           @click="deletePlan"
@@ -189,6 +229,17 @@ const editingItemTitle = ref('')
 // Add item
 const addItemTitle = ref('')
 
+// Copy plan
+const copying = ref(false)
+const showCopyPicker = ref(false)
+const copySourceDate = ref('')
+
+// Report status
+const hasReport = ref(false)
+
+// Past date edit confirmation
+const pastEditConfirmed = ref(false)
+
 const hasValidItems = computed(() => newItems.value.some(i => i.title.trim()))
 
 const sortedItems = computed(() =>
@@ -223,16 +274,29 @@ function goToday() {
 async function fetchPlan() {
   loading.value = true
   creating.value = false
-  const res = await api<any>(`/api/daily-plans?date=${selectedDate.value}`)
-  if (res.code === 200 && res.data) {
+  pastEditConfirmed.value = false
+  const [planRes, reportRes] = await Promise.all([
+    api<any>(`/api/daily-plans?date=${selectedDate.value}`),
+    api<any>(`/api/daily-reports?date=${selectedDate.value}`),
+  ])
+  if (planRes.code === 200 && planRes.data) {
     plan.value = {
-      ...res.data,
-      items: res.data.plan_items || [],
+      ...planRes.data,
+      items: planRes.data.plan_items || [],
     }
   } else {
     plan.value = null
   }
+  hasReport.value = !!(reportRes.code === 200 && reportRes.data)
   loading.value = false
+}
+
+async function confirmIfPast(): Promise<boolean> {
+  if (selectedDate.value >= today.value) return true
+  if (pastEditConfirmed.value) return true
+  const ok = await confirm('该日期已过，修改计划不会自动更新日报，是否继续？')
+  if (ok) pastEditConfirmed.value = true
+  return ok
 }
 
 async function createPlan() {
@@ -260,7 +324,42 @@ function addNewItem() {
   newItems.value.push({ title: '' })
 }
 
+function getPreviousDate(dateStr: string) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d - 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+async function copyFromPreviousDay() {
+  await copyFromDate(getPreviousDate(selectedDate.value))
+}
+
+async function copyFromDate(sourceDate: string) {
+  if (!sourceDate) return
+  copying.value = true
+  const res = await api<any>(`/api/daily-plans?date=${sourceDate}`)
+  copying.value = false
+  showCopyPicker.value = false
+
+  if (res.code !== 200 || !res.data) {
+    const { showToast } = useToast()
+    showToast(`${sourceDate} 没有计划可复制`, 'error')
+    return
+  }
+
+  const items = (res.data.plan_items || []) as PlanItem[]
+  newItems.value = items
+    .sort((a: PlanItem, b: PlanItem) => a.sort_order - b.sort_order)
+    .map((i: PlanItem) => ({ title: i.title }))
+  if (newItems.value.length === 0) {
+    newItems.value = [{ title: '' }]
+  }
+  newNote.value = res.data.note || ''
+  creating.value = true
+}
+
 async function toggleItem(item: PlanItem) {
+  if (!await confirmIfPast()) return
   item.completed = !item.completed
   const res = await api(`/api/plan-items/${item.id}`, {
     method: 'PUT',
@@ -277,6 +376,7 @@ function startEditItem(item: PlanItem) {
 async function saveEditItem(item: PlanItem) {
   const trimmed = editingItemTitle.value.trim()
   if (!trimmed) return
+  if (!await confirmIfPast()) return
   const prev = item.title
   item.title = trimmed
   editingItemId.value = null
@@ -290,6 +390,7 @@ async function saveEditItem(item: PlanItem) {
 async function addItem() {
   const title = addItemTitle.value.trim()
   if (!title || !plan.value) return
+  if (!await confirmIfPast()) return
   const sortOrder = (plan.value.items?.length || 0)
   const res = await api<PlanItem>('/api/plan-items', {
     method: 'POST',
@@ -303,6 +404,7 @@ async function addItem() {
 
 async function deleteItem(id: number) {
   if (!plan.value) return
+  if (!await confirmIfPast()) return
   const prev = plan.value.items || []
   plan.value.items = prev.filter(i => i.id !== id)
   const res = await api(`/api/plan-items/${id}`, { method: 'DELETE' })
@@ -311,6 +413,7 @@ async function deleteItem(id: number) {
 
 async function deletePlan() {
   if (!plan.value) return
+  if (!await confirmIfPast()) return
   if (!await confirm('确定删除该日计划？所有条目将一并删除。')) return
   const res = await api(`/api/daily-plans/${plan.value.id}`, { method: 'DELETE' })
   if (res.code === 200) {
